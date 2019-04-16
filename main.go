@@ -8,6 +8,7 @@ import (
 
 	"github.com/ericchiang/k8s"
 	corev1 "github.com/ericchiang/k8s/apis/core/v1"
+	metav1 "github.com/ericchiang/k8s/apis/meta/v1"
 )
 
 func main() {
@@ -21,12 +22,38 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Listing pods")
+	log.Println("Creating load ...")
+	launchPod(client, namespace, "test")
+	log.Println("Listing pods I generated")
+	l := new(k8s.LabelSelector)
+	l.Eq("generator", "kboom")
 	var pods corev1.PodList
-	if err := client.List(context.Background(), namespace, &pods); err != nil {
+	if err := client.List(context.Background(), namespace, &pods, l.Selector()); err != nil {
 		log.Fatal(err)
 	}
 	for _, pod := range pods.Items {
 		fmt.Printf("%v+", *pod)
+	}
+}
+
+func launchPod(client *k8s.Client, namespace, name string) {
+	pod := &corev1.Pod{
+		Metadata: &metav1.ObjectMeta{
+			Name:      k8s.String(name),
+			Namespace: k8s.String(namespace),
+			Labels:    map[string]string{"generator": "kboom"},
+		},
+		Spec: &corev1.PodSpec{
+			Containers: []*corev1.Container{
+				&corev1.Container{
+					Name:  k8s.String("main"),
+					Image: k8s.String("busybox"),
+				},
+			},
+		},
+	}
+
+	if err := client.Create(context.Background(), pod); err != nil {
+		log.Fatal(err)
 	}
 }
