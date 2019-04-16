@@ -1,4 +1,6 @@
-# kboom
+# A simple Kubernetes load testing tool
+
+![kboom logo](img/kboom-logo.png)
 
 Think of `kboom` as the Kubernetes equivalent of [boom](https://github.com/tarekziade/boom), allwoing you to create short-term load for scale-testing and long-term load for soak-testing. Supported load out of the box are namespaces, pods, services, and deployments as well as custom resource via CRDs.
 
