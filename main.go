@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	var namespace string
 	var mode string
 	flag.StringVar(&mode, "namespace", "kboom", "The namespace to run in, must exist.")
 	flag.StringVar(&mode, "mode", "scale", "The mode to operate in: scale for short-term/perf testing, soak for long-term testing.")
@@ -22,7 +23,7 @@ func main() {
 	}
 	log.Println("Listing pods")
 	var pods corev1.PodList
-	if err := client.List(context.Background(), "", &pods); err != nil {
+	if err := client.List(context.Background(), namespace, &pods); err != nil {
 		log.Fatal(err)
 	}
 	for _, pod := range pods.Items {
