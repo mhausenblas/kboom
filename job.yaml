@@ -7,6 +7,6 @@ spec:
     spec:
       serviceAccountName: kboom-sa
       containers:
-      - image: 661776721573.dkr.ecr.us-east-2.amazonaws.com/kboom:d05ce4d
+      - image: 661776721573.dkr.ecr.us-east-2.amazonaws.com/kboom:2bf4038
         name: kboom
       restartPolicy: Never

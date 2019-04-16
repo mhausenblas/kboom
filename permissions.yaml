@@ -5,26 +5,15 @@ metadata:
   name: kboom-sa  
   namespace: kboom
 ---
-kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
 metadata:
-  name: kboom-cr
-rules:
-  - apiGroups: ["*"]
-    resources: ["pods"]
-    verbs: ["get,list"]
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: kboom-binding
-  namespace: kboom
-subjects:
-  - kind: ServiceAccount
-    name: kboom-sa
-    namespace: kboom
-    apiGroup: ""
+  name: kboom-crb
 roleRef:
+  apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kboom-cr
-  apiGroup: ""
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: kboom-sa
+  namespace: kboom
