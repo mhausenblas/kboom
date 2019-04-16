@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kboom-sa  
+  namespace: kboom
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: kboom-cr
+rules:
+  - apiGroups: ["*"]
+    resources: ["pods"]
+    verbs: ["get,list"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: kboom-binding
+  namespace: kboom
+subjects:
+  - kind: ServiceAccount
+    name: kboom-sa
+    namespace: kboom
+    apiGroup: ""
+roleRef:
+  kind: ClusterRole
+  name: kboom-cr
+  apiGroup: ""
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kboom
+spec:
+  template:
+    spec:
+      serviceAccountName: kboom-sa
+      containers:
+      - image: 661776721573.dkr.ecr.us-east-2.amazonaws.com/kboom:5054297
+        name: kboom
+      restartPolicy: Never
