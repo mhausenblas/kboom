@@ -13,7 +13,7 @@ import (
 func main() {
 	var namespace string
 	var mode string
-	flag.StringVar(&mode, "namespace", "kboom", "The namespace to run in, must exist.")
+	flag.StringVar(&namespace, "namespace", "kboom", "The namespace to run in, must exist.")
 	flag.StringVar(&mode, "mode", "scale", "The mode to operate in: scale for short-term/perf testing, soak for long-term testing.")
 	flag.Parse()
 
