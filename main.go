@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
+	"time"
 
 	"github.com/ericchiang/k8s"
 	corev1 "github.com/ericchiang/k8s/apis/core/v1"
@@ -23,20 +23,11 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println("Creating load ...")
-	launchPod(client, namespace, "test")
-	log.Println("Listing pods I generated")
-	l := new(k8s.LabelSelector)
-	l.Eq("generator", "kboom")
-	var pods corev1.PodList
-	if err := client.List(context.Background(), namespace, &pods, l.Selector()); err != nil {
-		log.Fatal(err)
-	}
-	for _, pod := range pods.Items {
-		fmt.Printf("%v+", *pod)
-	}
+	launchPods(client, namespace, "test")
+
 }
 
-func launchPod(client *k8s.Client, namespace, name string) {
+func launchPods(client *k8s.Client, namespace, name string) {
 	pod := &corev1.Pod{
 		Metadata: &metav1.ObjectMeta{
 			Name:      k8s.String(name),
@@ -52,8 +43,24 @@ func launchPod(client *k8s.Client, namespace, name string) {
 			},
 		},
 	}
-
+	start := time.Now()
 	if err := client.Create(context.Background(), pod); err != nil {
 		log.Fatal(err)
+	}
+	// wait until all are running:
+	// TBD
+	diff := time.Now().Sub(start)
+	log.Printf("Total time pods %v", diff)
+}
+
+func listAllPods(client *k8s.Client, namespace string) {
+	l := new(k8s.LabelSelector)
+	l.Eq("generator", "kboom")
+	var pods corev1.PodList
+	if err := client.List(context.Background(), namespace, &pods, l.Selector()); err != nil {
+		log.Fatal(err)
+	}
+	for _, pod := range pods.Items {
+		log.Printf("%v", *pod)
 	}
 }
