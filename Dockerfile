@@ -9,8 +9,7 @@ WORKDIR /go/src/github.com/mhausenblas/kboom
 
 COPY  . .
 RUN adduser -D -u 10001 kboom
-RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' \
-    -o kboom main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o kboom .
 
 FROM scratch
 COPY --from=build-env /go/src/github.com/mhausenblas/kboom/kboom .

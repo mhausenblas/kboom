@@ -14,15 +14,19 @@ import (
 func main() {
 	var namespace string
 	var mode string
-	flag.StringVar(&namespace, "namespace", "kboom", "The namespace to run in, must exist.")
+	var load string
+	flag.StringVar(&namespace, "namespace", "kboom", "The namespace to run in, must exist. Create with kubectl create ns if not done yet.")
 	flag.StringVar(&mode, "mode", "scale", "The mode to operate in: scale for short-term/perf testing, soak for long-term testing.")
+	flag.StringVar(&load, "load", "pods:5", "The load in the format resource:number comma-separated, defaults to pods:5.")
 	flag.Parse()
 
 	client, err := k8s.NewInClusterClient()
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Creating load ...")
+	log.Println(load)
+	numpods, numsvc, numdeploy := parseAllLoad(load)
+	log.Printf("Creating load: %v pods, %v services, %v deployments\n", numpods, numsvc, numdeploy)
 	launchPods(client, namespace, "test")
 
 }

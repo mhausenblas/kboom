@@ -5,7 +5,7 @@
 
 > NOTE: this is WIP and also not an official AWS tool. Use at your own risk.
 
-Think of `kboom` as the Kubernetes equivalent of [boom](https://github.com/tarekziade/boom), allwoing you to create short-term load for scale-testing and long-term load for soak-testing. Supported load out of the box are namespaces, pods, services, and deployments as well as custom resource via CRDs.
+Think of `kboom` as the Kubernetes equivalent of [boom](https://github.com/tarekziade/boom), allowing you to create short-term load for scale-testing and long-term load for soak-testing. Supported load out of the box are pods, services, and deployments as well as custom resource via CRDs.
 
 ## Install
 
