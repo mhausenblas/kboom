@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/ericchiang/k8s"
+	"github.com/mhausenblas/kubecuddler"
 )
 
 func main() {
@@ -23,6 +24,9 @@ func main() {
 	log.Println(load)
 	numpods, numsvc, numdeploy := parseAllLoad(load)
 	log.Printf("Creating load: %v pods, %v services, %v deployments\n", numpods, numsvc, numdeploy)
+
+	res, _ := kubecuddler.Kubectl(false, false, "/kubectl", "version", "--short")
+	log.Println(res)
 
 	switch mode {
 	case "scale":

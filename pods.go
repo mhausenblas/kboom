@@ -25,7 +25,6 @@ func launchPods(client *k8s.Client, namespace string, numpods int) (totaltime ti
 			}
 			launchedpods = append(launchedpods, pod)
 		}
-
 		// wait until all are running:
 		for {
 			allrunning, err := checkpods(client, namespace)
@@ -35,7 +34,7 @@ func launchPods(client *k8s.Client, namespace string, numpods int) (totaltime ti
 			if allrunning {
 				break
 			}
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 		}
 		totaltime = time.Now().Sub(start)
 		// clean up pods:
