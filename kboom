@@ -2,6 +2,9 @@
 
 set -e
 
+
+function genload {
+
 tmpdir=$(mktemp -d)
 
 cat <<EOF >> ${tmpdir}/kboom-job.yaml
@@ -16,7 +19,52 @@ spec:
       containers:
       - name: kboom
         image: 661776721573.dkr.ecr.us-east-2.amazonaws.com/kboom:latest
+        command:
+        - "/kboom"
+        - "--mode=scale"
+        - "--load=pods:1"
       restartPolicy: Never
 EOF
 
 kubectl apply -f ${tmpdir}/kboom-job.yaml
+}
+
+
+# ### command line arguments
+
+COMMAND="${1:-results}"  
+
+# while [ $# -gt 0 ]; do
+#   case "$1" in
+#     --p_out=*)
+#       p_out="${1#*=}"
+#       ;;
+#     --arg_1=*)
+#       arg_1="${1#*=}"
+#       ;;
+#     *)
+#       printf "***************************\n"
+#       printf "* Error: Invalid argument.*\n"
+#       printf "***************************\n"
+#       exit 1
+#   esac
+#   shift
+# done
+
+################################################################################
+### MAIN #######################################################################
+
+case $COMMAND in
+generate)
+  genload
+  ;;
+results)
+  kubectl logs job/kboom
+  ;;
+cleanup)
+  kubectl delete job/kboom
+  ;;
+*)
+  printf "The [$COMMAND] command is not supported! Use 'generate' to generate some load, 'results' to view the results, or 'cleanup' to clean up all resources.\n"
+esac
+
