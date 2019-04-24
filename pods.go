@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 
 func launchPods(client *k8s.Client, namespace string, numpods int) (totaltime time.Duration) {
 	if numpods > 0 {
-		name := "scale-sleeper"
+		name := "scale-sleeper-0"
 		pod := &corev1.Pod{
 			Metadata: &metav1.ObjectMeta{
 				Name:      k8s.String(name),
@@ -30,11 +31,14 @@ func launchPods(client *k8s.Client, namespace string, numpods int) (totaltime ti
 			},
 		}
 		start := time.Now()
-		if err := client.Create(context.Background(), pod); err != nil {
-			log.Printf("Can't create pod: %v", err)
+		for i := 1; i < numpods; i++ {
+			if err := client.Create(context.Background(), pod); err != nil {
+				log.Printf("Can't create pod %v: %v", pod.Metadata.Name, err)
+			}
+			*pod.Metadata.Name = fmt.Sprintf("scale-sleeper-%d", i)
 		}
-		// wait until all are running:
 
+		// wait until all are running:
 		for {
 			allrunning, err := checkpods(client, namespace)
 			if err != nil {
@@ -45,8 +49,15 @@ func launchPods(client *k8s.Client, namespace string, numpods int) (totaltime ti
 			}
 			time.Sleep(2 * time.Second)
 		}
-
 		totaltime = time.Now().Sub(start)
+
+		// clean up pods:
+		for i := 0; i < numpods; i++ {
+			*pod.Metadata.Name = fmt.Sprintf("scale-sleeper-%d", i)
+			if err := client.Delete(context.Background(), pod); err != nil {
+				log.Printf("Can't delete pod %v: %v", pod.Metadata.Name, err)
+			}
+		}
 		return totaltime
 	}
 	return time.Duration(0)
