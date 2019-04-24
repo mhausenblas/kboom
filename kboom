@@ -4,6 +4,11 @@ set -e
 
 
 function genload {
+namespace=$1
+mode=$2
+load=$3
+
+# echo using namespace=\"$namespace\", mode \"$mode\", and load \"$load\"
 
 tmpdir=$(mktemp -d)
 
@@ -21,42 +26,48 @@ spec:
         image: 661776721573.dkr.ecr.us-east-2.amazonaws.com/kboom:latest
         command:
         - "/kboom"
-        - "--mode=scale"
-        - "--load=pods:1"
+        - "--namespace=$namespace"
+        - "--mode=$mode"
+        - "--load=$load"
       restartPolicy: Never
 EOF
+
+# cat ${tmpdir}/kboom-job.yaml
 
 kubectl apply -f ${tmpdir}/kboom-job.yaml
 }
 
 
-# ### command line arguments
+################################################################################
+### PARAMETERS #################################################################
 
-COMMAND="${1:-results}"  
-
-# while [ $# -gt 0 ]; do
-#   case "$1" in
-#     --p_out=*)
-#       p_out="${1#*=}"
-#       ;;
-#     --arg_1=*)
-#       arg_1="${1#*=}"
-#       ;;
-#     *)
-#       printf "***************************\n"
-#       printf "* Error: Invalid argument.*\n"
-#       printf "***************************\n"
-#       exit 1
-#   esac
-#   shift
-# done
+command="${1:-results}"  
+namespace="kboom"
+mode="scale"
+load="pods:1"
 
 ################################################################################
 ### MAIN #######################################################################
 
-case $COMMAND in
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --namespace=*)
+      namespace="${1#*=}"
+      ;;
+    --mode=*)
+      mode="${1#*=}"
+      ;;
+    --load=*)
+      load="${1#*=}"
+      ;;
+  esac
+  shift
+done
+
+
+case $command in
 generate)
-  genload
+  genload $namespace $mode $load
   ;;
 results)
   kubectl logs job/kboom
