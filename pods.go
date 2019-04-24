@@ -13,29 +13,17 @@ import (
 
 func launchPods(client *k8s.Client, namespace string, numpods int) (totaltime time.Duration) {
 	if numpods > 0 {
-		name := "scale-sleeper-0"
-		pod := &corev1.Pod{
-			Metadata: &metav1.ObjectMeta{
-				Name:      k8s.String(name),
-				Namespace: k8s.String(namespace),
-				Labels:    map[string]string{"generator": "kboom"},
-			},
-			Spec: &corev1.PodSpec{
-				Containers: []*corev1.Container{
-					&corev1.Container{
-						Name:    k8s.String("main"),
-						Image:   k8s.String("busybox"),
-						Command: []string{"/bin/sh", "-ec", "sleep 3600"},
-					},
-				},
-			},
-		}
+		var launchedpods []*corev1.Pod
 		start := time.Now()
-		for i := 1; i < numpods; i++ {
-			if err := client.Create(context.Background(), pod); err != nil {
-				log.Printf("Can't create pod %v: %v", pod.Metadata.Name, err)
+		// create the pods:
+		for i := 0; i < numpods; i++ {
+			pod := genpod(namespace, fmt.Sprintf("scale-sleeper-%d", i))
+			err := client.Create(context.Background(), pod)
+			if err != nil {
+				log.Printf("Can't create pod %v: %v", *pod.Metadata.Name, err)
+				continue
 			}
-			*pod.Metadata.Name = fmt.Sprintf("scale-sleeper-%d", i)
+			launchedpods = append(launchedpods, pod)
 		}
 
 		// wait until all are running:
@@ -50,12 +38,10 @@ func launchPods(client *k8s.Client, namespace string, numpods int) (totaltime ti
 			time.Sleep(2 * time.Second)
 		}
 		totaltime = time.Now().Sub(start)
-
 		// clean up pods:
-		for i := 0; i < numpods; i++ {
-			*pod.Metadata.Name = fmt.Sprintf("scale-sleeper-%d", i)
+		for _, pod := range launchedpods {
 			if err := client.Delete(context.Background(), pod); err != nil {
-				log.Printf("Can't delete pod %v: %v", pod.Metadata.Name, err)
+				log.Printf("Can't delete pod %v: %v", *pod.Metadata.Name, err)
 			}
 		}
 		return totaltime
@@ -78,4 +64,23 @@ func checkpods(client *k8s.Client, namespace string) (allrunning bool, err error
 		}
 	}
 	return allrunning, nil
+}
+
+func genpod(namespace, name string) *corev1.Pod {
+	return &corev1.Pod{
+		Metadata: &metav1.ObjectMeta{
+			Name:      k8s.String(name),
+			Namespace: k8s.String(namespace),
+			Labels:    map[string]string{"generator": "kboom"},
+		},
+		Spec: &corev1.PodSpec{
+			Containers: []*corev1.Container{
+				&corev1.Container{
+					Name:    k8s.String("main"),
+					Image:   k8s.String("busybox"),
+					Command: []string{"/bin/sh", "-ec", "sleep 3600"},
+				},
+			},
+		},
+	}
 }

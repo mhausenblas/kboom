@@ -14,8 +14,8 @@ spec:
     spec:
       serviceAccountName: kboom-sa
       containers:
-      - image: 661776721573.dkr.ecr.us-east-2.amazonaws.com/kboom:latest
-        name: kboom
+      - name: kboom
+        image: 661776721573.dkr.ecr.us-east-2.amazonaws.com/kboom:latest
       restartPolicy: Never
 EOF
 
