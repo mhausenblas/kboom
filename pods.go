@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ericchiang/k8s"
@@ -18,119 +20,99 @@ type podrun struct {
 	Namespace  string
 	Ordinalnum int
 	Pod        *corev1.Pod
-	Done       time.Time
+	Success    bool
+	Start      time.Time
+	End        time.Time
 }
 
 type Result struct {
-	Totaltime time.Duration
-	P50       time.Duration
-	P95       time.Duration
+	Totalsuccess int
+	Totaltime    time.Duration
+	P50          time.Duration
+	P95          time.Duration
 }
 
 func (run podrun) launch() {
+	run.Start = time.Now()
+	run.Success = false
 	pod := genpod(run.Namespace, fmt.Sprintf("%s-sleeper-%d", run.Loadtype, run.Ordinalnum))
 	err := run.Client.Create(context.Background(), pod)
 	if err != nil {
 		log.Printf("Can't create pod %v: %v", *pod.Metadata.Name, err)
 	}
-	watcher, err := run.Client.Watch(context.Background(), run.Namespace, pod)
-	if err != nil {
-		log.Printf("Can't watch pod %v: %v", *pod.Metadata.Name, err)
-	}
-	defer watcher.Close()
-	for {
-		p := new(corev1.Pod)
-		eventType, err := watcher.Next(p)
-		if err != nil {
-			log.Printf("Watching %v failed, giving up: %v", *p.Metadata.Name, err)
-			break
-		}
-		log.Printf("Detected an %v event on %v", eventType, *p.Metadata.Name)
-		podphase := p.GetStatus().GetPhase()
-		if podphase == "Running" {
-			break
-		}
-	}
-	run.Done = time.Now()
+	run.Pod = pod
 }
 
 func launchPods(client *k8s.Client, namespace string, numpods int) Result {
 	c := tachymeter.New(&tachymeter.Config{Size: numpods})
-	var podruns []podrun
+	var podruns []*podrun
+
+	// launch the pods in parallel, as fast as we can:
 	for i := 0; i < numpods; i++ {
-		start := time.Now()
-		pr := podrun{
+		pr := &podrun{
 			Loadtype:   "scale",
 			Client:     client,
 			Namespace:  namespace,
 			Ordinalnum: i,
 		}
 		podruns = append(podruns, pr)
-		pr.launch()
-		c.AddTime(time.Since(start))
+		go pr.launch()
+	}
+
+	// check for successful running pods and capture their
+	// overall time, that is, launch time to 'Running':
+	l := new(k8s.LabelSelector)
+	l.Eq("generator", "kboom")
+	for {
+		var pods corev1.PodList
+		if err := client.List(context.Background(), namespace, &pods, l.Selector()); err != nil {
+			log.Printf("Can't check pods: %v", err)
+		}
+		allrunning := true
+		for _, pod := range pods.Items {
+			podname := *pod.Metadata.Name
+			podphase := pod.GetStatus().GetPhase()
+			if podphase == "Running" {
+				podruns[name2ord(podname)].End = time.Now()
+				podruns[name2ord(podname)].Success = true
+				continue
+			}
+			allrunning = false
+		}
+		if allrunning {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	// record stats and clean up pods:
+	var numsuccess int
+	for _, run := range podruns {
+		c.AddTime(run.End.Sub(run.Start))
+		if run.Success {
+			numsuccess++
+		}
+		if err := client.Delete(context.Background(), run.Pod); err != nil {
+			log.Printf("Can't delete pod %v: %v", *run.Pod.Metadata.Name, err)
+		}
 	}
 	results := c.Calc()
 	return Result{
-		Totaltime: results.Time.Cumulative,
-		P50:       results.Time.P50,
-		P95:       results.Time.P95,
+		Totalsuccess: numsuccess,
+		Totaltime:    results.Time.Cumulative,
+		P50:          results.Time.P50,
+		P95:          results.Time.P95,
 	}
 }
 
-func oldlaunchPods(client *k8s.Client, namespace string, numpods int) (totaltime time.Duration) {
-	if numpods > 0 {
-		var launchedpods []*corev1.Pod
-		start := time.Now()
-		// create the pods:
-		for i := 0; i < numpods; i++ {
-			pod := genpod(namespace, fmt.Sprintf("scale-sleeper-%d", i))
-			err := client.Create(context.Background(), pod)
-			if err != nil {
-				log.Printf("Can't create pod %v: %v", *pod.Metadata.Name, err)
-				continue
-			}
-			launchedpods = append(launchedpods, pod)
-		}
-		// wait until all are running:
-		for {
-			allrunning, err := checkpods(client, namespace)
-			if err != nil {
-				log.Printf("Can't check pods: %v", err)
-			}
-			if allrunning {
-				break
-			}
-			time.Sleep(1 * time.Second)
-		}
-		totaltime = time.Now().Sub(start)
-		// clean up pods:
-		for _, pod := range launchedpods {
-			if err := client.Delete(context.Background(), pod); err != nil {
-				log.Printf("Can't delete pod %v: %v", *pod.Metadata.Name, err)
-			}
-		}
-		return totaltime
-	}
-	return time.Duration(0)
+// name2ord converts the name of a load tester pod to its
+// ordinal number, for example: scale-sleeper-42 -> 42
+func name2ord(name string) int {
+	ordinalstr := strings.SplitAfterN(name, "-", 3)[2]
+	ordinalnum, _ := strconv.Atoi(ordinalstr)
+	return ordinalnum
 }
 
-func checkpods(client *k8s.Client, namespace string) (allrunning bool, err error) {
-	allrunning = true
-	l := new(k8s.LabelSelector)
-	l.Eq("generator", "kboom")
-	var pods corev1.PodList
-	if err = client.List(context.Background(), namespace, &pods, l.Selector()); err != nil {
-		return false, err
-	}
-	for _, pod := range pods.Items {
-		podphase := pod.GetStatus().GetPhase()
-		if podphase != "Running" {
-			allrunning = false
-		}
-	}
-	return allrunning, nil
-}
-
+// genpod generates the pod specification
 func genpod(namespace, name string) *corev1.Pod {
 	return &corev1.Pod{
 		Metadata: &metav1.ObjectMeta{

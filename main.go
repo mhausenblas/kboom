@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 
 	"github.com/ericchiang/k8s"
@@ -17,22 +18,26 @@ func main() {
 	flag.StringVar(&load, "load", "pods:1", "The load in the format resource:number comma-separated, defaults to pods:1.")
 	flag.Parse()
 
+	res, _ := kubecuddler.Kubectl(false, false, "/kubectl", "version", "--short")
+	fmt.Println(res)
+
 	client, err := k8s.NewInClusterClient()
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println(load)
 	numpods, numsvc, numdeploy := parseAllLoad(load)
-	log.Printf("Creating load: %v pods, %v services, %v deployments\n", numpods, numsvc, numdeploy)
+	fmt.Printf("Generating load: %v pods, %v services, %v deployments\n", numpods, numsvc, numdeploy)
 
-	res, _ := kubecuddler.Kubectl(false, false, "/kubectl", "version", "--short")
-	log.Println(res)
-
+	fmt.Println("-------- Results --------")
 	switch mode {
 	case "scale":
 		if numpods > 0 {
 			r := launchPods(client, namespace, numpods)
-			log.Printf("Stats:\n%v\n", r)
+			fmt.Printf("Overall pods: %v out of %v successful\n", r.Totalsuccess, numpods)
+			fmt.Printf("Total time pods: %v\n", r.Totaltime)
+			fmt.Printf("p50 pods: %v\n", r.P50)
+			fmt.Printf("p95 pods: %v\n", r.P95)
 		}
 	case "soak":
 		log.Println("Not yet implemented, aborting.")
