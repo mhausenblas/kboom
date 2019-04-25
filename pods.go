@@ -26,10 +26,12 @@ type podrun struct {
 }
 
 type Result struct {
-	Totalsuccess int
-	Totaltime    time.Duration
-	P50          time.Duration
-	P95          time.Duration
+	Totalsuccess      int
+	Totaltime         time.Duration
+	Cumulative        time.Duration
+	P50               time.Duration
+	P95               time.Duration
+	LaunchesPerSecond float64
 }
 
 func (run *podrun) launch() {
@@ -45,6 +47,7 @@ func (run *podrun) launch() {
 
 func launchPods(client *k8s.Client, namespace string, timeoutinsec time.Duration, numpods int) Result {
 	c := tachymeter.New(&tachymeter.Config{Size: numpods})
+	start := time.Now()
 	var podruns []*podrun
 
 	// launch the pods in parallel, as fast as we can:
@@ -100,10 +103,12 @@ Check:
 	}
 	results := c.Calc()
 	return Result{
-		Totalsuccess: numsuccess,
-		Totaltime:    results.Time.Cumulative,
-		P50:          results.Time.P50,
-		P95:          results.Time.P95,
+		Totalsuccess:      numsuccess,
+		Totaltime:         time.Since(start),
+		Cumulative:        results.Time.Cumulative,
+		P50:               results.Time.P50,
+		P95:               results.Time.P95,
+		LaunchesPerSecond: results.Rate.Second,
 	}
 }
 

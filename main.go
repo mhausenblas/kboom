@@ -32,8 +32,10 @@ func main() {
 	case "scale":
 		if numpods > 0 {
 			r := launchPods(client, namespace, timeoutinsec, numpods)
-			fmt.Printf("Overall pods: %v out of %v successful\n", r.Totalsuccess, numpods)
-			fmt.Printf("Total time pods: %v\n", r.Totaltime)
+			fmt.Printf("Overall %v out of %v pods successful\n", r.Totalsuccess, numpods)
+			fmt.Printf("Total runtime: %v\n", r.Totaltime)
+			fmt.Printf("Cumulative time pods: %v\n", r.Cumulative)
+			fmt.Printf("Successful launches per second: %v\n", r.P95)
 			fmt.Printf("p50 pods: %v\n", r.P50)
 			fmt.Printf("p95 pods: %v\n", r.P95)
 		}

@@ -43,7 +43,7 @@ kubectl apply -f ${tmpdir}/kboom-job.yaml
 
 command="${1:-results}"  
 namespace="kboom"
-mode="scale"
+mode="scale:20"
 load="pods:1"
 
 ################################################################################

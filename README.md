@@ -26,10 +26,10 @@ $ sudo mv ./kubectl-kboom /usr/local/bin
 
 Here's how you'd use `kboom` to do some scale-testing using 10 pods. Note that the load test is run in-cluster as a [Kubernetes job](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) so you do multiple runs and compare outcomes in a straight-forward manner.
 
-So, first we use the `generate` command to generate the scale load, launching 10 pods (that is, using `busybox` containers that just sleep):
+So, first we use the `generate` command to generate the scale load, launching 10 pods (that is, using `busybox` containers that just sleep) with a timeout of 18 seconds (that is, if a pod is not running within that time, it's considered a failure):
 
 ```bash
-$ kubectl kboom generate --load=pods:10
+$ kubectl kboom generate --mode=scale:18 --load=pods:10
 job.batch/kboom created
 ```
 
@@ -40,12 +40,12 @@ From now on you can execute the `results` command as often as you like, you can 
 $ kubectl kboom results
 Client Version: v1.14.0
 Server Version: v1.12.6-eks-d69f1b
-Generating load: 10 pods, 0 services, 0 deployments
+Generating load: launching 10 pod(s) with a 20s timeout ...
 -------- Results --------
 Overall pods: 10 out of 10 successful
-Total time pods: 2m51.26601059s
-p50 pods: 17.126641281s
-p95 pods: 17.12704589s
+Total time pods: 3m10.067912569s
+p50 pods: 19.006759474s
+p95 pods: 19.007340701s
 ```
 
-When you're done, and don't need the results anymore, use `kubectl kboom cleanup` to get rid of the run.
+When you're done, and don't need the results anymore, use `kubectl kboom cleanup` to get rid of the run. Note: should you execute the `cleanup` command too soon for `kboom` to terminate all its test pods, you can use `kubectl delete po -l=generator=kboom` to get rid of all orphaned pods.
