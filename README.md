@@ -43,11 +43,11 @@ Server Version: v1.12.6-eks-d69f1b
 Running a scale test, launching 10 pod(s) with a 14s timeout ...
 
 -------- Results --------
-Overall pods successful: 7 out of 10
-Total runtime: 14.106868399s sec
-Fastest/slowest pod: 13.005129718s sec/13.006064873s sec
-p50 pods: 13.005613259s
-p95 pods: 13.006064873s
+Overall pods successful: 6 out of 10
+Total runtime: 14.061988653s sec
+Fastest/slowest pod: 9.003997546s sec/13.003831951s sec
+p50 pods: 12.003529448s
+p95 pods: 13.003831951s
 ```
 
 When you're done, and don't need the results anymore, use `kubectl kboom cleanup` to get rid of the run. Note: should you execute the `cleanup` command too soon for `kboom` to terminate all its test pods, you can use `kubectl delete po -l=generator=kboom` to get rid of all orphaned pods.
