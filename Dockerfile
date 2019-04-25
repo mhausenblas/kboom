@@ -11,6 +11,7 @@ FROM golang:1.12-alpine AS build-env
 RUN apk add git                                   && \
     go get github.com/ericchiang/k8s              && \
     go get github.com/mhausenblas/kubecuddler     && \
+    go get github.com/jamiealquiza/tachymeter     && \
     mkdir -p /go/src/github.com/mhausenblas/kboom
 
 WORKDIR /go/src/github.com/mhausenblas/kboom
