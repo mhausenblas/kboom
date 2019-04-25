@@ -43,7 +43,7 @@ func (run *podrun) launch() {
 	run.Pod = pod
 }
 
-func launchPods(client *k8s.Client, namespace string, numpods int) Result {
+func launchPods(client *k8s.Client, namespace string, timeoutinsec time.Duration, numpods int) Result {
 	c := tachymeter.New(&tachymeter.Config{Size: numpods})
 	var podruns []*podrun
 
@@ -59,10 +59,10 @@ func launchPods(client *k8s.Client, namespace string, numpods int) Result {
 		go pr.launch()
 	}
 
-	// check every 500ms for successful running pods and capture
+	// check every second for successful running pods and capture
 	// their overall time, that is, launch to phase 'Running':
-	timeout := time.After(10 * time.Second)
-	tick := time.Tick(500 * time.Millisecond)
+	timeout := time.After(timeoutinsec)
+	tick := time.Tick(1000 * time.Millisecond)
 	l := new(k8s.LabelSelector)
 	l.Eq("generator", "kboom")
 Check:

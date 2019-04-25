@@ -11,6 +11,6 @@ spec:
         image: 661776721573.dkr.ecr.us-east-2.amazonaws.com/kboom:{{REVISION_ID}}
         command:
         - "/kboom"
-        - "--mode=scale"
-        - "--load=pods:3"
+        - "--mode=scale:20"
+        - "--load=pods:10"
       restartPolicy: Never
