@@ -94,8 +94,8 @@ Check:
 	// record stats and clean up pods:
 	var numsuccess int
 	for _, run := range podruns {
-		c.AddTime(run.End.Sub(run.Start))
 		if run.Success {
+			c.AddTime(run.End.Sub(run.Start))
 			numsuccess++
 		}
 		if err := client.Delete(context.Background(), run.Pod); err != nil {
