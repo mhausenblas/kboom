@@ -17,18 +17,14 @@ func main() {
 	flag.StringVar(&mode, "mode", "scale", "The mode to operate in: scale for short-term/perf testing, soak for long-term testing.")
 	flag.StringVar(&load, "load", "pods:1", "The load in the format resource:number comma-separated, defaults to pods:1.")
 	flag.Parse()
-
 	res, _ := kubecuddler.Kubectl(false, false, "/kubectl", "version", "--short")
 	fmt.Println(res)
-
 	client, err := k8s.NewInClusterClient()
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(load)
 	numpods, numsvc, numdeploy := parseAllLoad(load)
 	fmt.Printf("Generating load: %v pods, %v services, %v deployments\n", numpods, numsvc, numdeploy)
-
 	fmt.Println("-------- Results --------")
 	switch mode {
 	case "scale":

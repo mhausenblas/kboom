@@ -32,7 +32,7 @@ type Result struct {
 	P95          time.Duration
 }
 
-func (run podrun) launch() {
+func (run *podrun) launch() {
 	run.Start = time.Now()
 	run.Success = false
 	pod := genpod(run.Namespace, fmt.Sprintf("%s-sleeper-%d", run.Loadtype, run.Ordinalnum))
