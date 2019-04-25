@@ -26,12 +26,13 @@ type podrun struct {
 }
 
 type Result struct {
-	Totalsuccess      int
-	Totaltime         time.Duration
-	Cumulative        time.Duration
-	P50               time.Duration
-	P95               time.Duration
-	LaunchesPerSecond float64
+	Totalsuccess int
+	Totaltime    time.Duration
+	Cumulative   time.Duration
+	Min          time.Duration
+	Max          time.Duration
+	P50          time.Duration
+	P95          time.Duration
 }
 
 func (run *podrun) launch() {
@@ -103,12 +104,13 @@ Check:
 	}
 	results := c.Calc()
 	return Result{
-		Totalsuccess:      numsuccess,
-		Totaltime:         time.Since(start),
-		Cumulative:        results.Time.Cumulative,
-		P50:               results.Time.P50,
-		P95:               results.Time.P95,
-		LaunchesPerSecond: results.Rate.Second,
+		Totalsuccess: numsuccess,
+		Totaltime:    time.Since(start),
+		Cumulative:   results.Time.Cumulative,
+		Min:          results.Time.Min,
+		Max:          results.Time.Max,
+		P50:          results.Time.P50,
+		P95:          results.Time.P95,
 	}
 }
 

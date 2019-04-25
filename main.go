@@ -33,11 +33,10 @@ func main() {
 		if numpods > 0 {
 			r := launchPods(client, namespace, timeoutinsec, numpods)
 			fmt.Printf("Overall %v out of %v pods successful\n", r.Totalsuccess, numpods)
-			fmt.Printf("Total runtime: %v\n", r.Totaltime)
-			fmt.Printf("Cumulative time pods: %v\n", r.Cumulative)
-			fmt.Printf("Successful launches per second: %v\n", r.P95)
-			fmt.Printf("p50 pods: %v\n", r.P50)
-			fmt.Printf("p95 pods: %v\n", r.P95)
+			fmt.Printf("Total runtime: %v sec\n", r.Totaltime.Seconds())
+			fmt.Printf("Fastest/slowest pod: %v sec/%v sec\n", r.Min.Seconds(), r.Max.Seconds())
+			fmt.Printf("p50 pods: %v sec\n", r.P50.Seconds())
+			fmt.Printf("p95 pods: %v\n sec", r.P95.Seconds())
 		}
 	case "soak":
 		log.Println("Not yet implemented, aborting.")
