@@ -33,8 +33,9 @@ func main() {
 		if numpods > 0 {
 			r := launchPods(client, namespace, timeoutinsec, numpods)
 			fmt.Printf("Overall pods successful: %v out of %v\n", r.Totalsuccess, numpods)
-			fmt.Printf("Total runtime: %v sec\n", r.Totaltime)
-			fmt.Printf("Fastest/slowest pod: %v sec/%v sec\n", r.Min, r.Max)
+			fmt.Printf("Total runtime: %v\n", r.Totaltime)
+			fmt.Printf("Fastest pod: %v\n", r.Min)
+			fmt.Printf("Slowest pod: %v\n", r.Max)
 			fmt.Printf("p50 pods: %v\n", r.P50)
 			fmt.Printf("p95 pods: %v\n", r.P95)
 		}

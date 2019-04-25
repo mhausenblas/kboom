@@ -45,7 +45,8 @@ Running a scale test, launching 10 pod(s) with a 14s timeout ...
 -------- Results --------
 Overall pods successful: 6 out of 10
 Total runtime: 14.061988653s sec
-Fastest/slowest pod: 9.003997546s sec/13.003831951s sec
+Fastest pod: 9.003997546s
+Slowest pod: 13.003831951s
 p50 pods: 12.003529448s
 p95 pods: 13.003831951s
 ```
