@@ -84,8 +84,10 @@ Check:
 				podname := *pod.Metadata.Name
 				podphase := pod.GetStatus().GetPhase()
 				if podphase == "Running" {
-					podruns[name2ord(podname)].End = time.Now()
-					podruns[name2ord(podname)].Success = true
+					if !podruns[name2ord(podname)].Success {
+						podruns[name2ord(podname)].End = time.Now()
+						podruns[name2ord(podname)].Success = true
+					}
 				}
 			}
 		}
