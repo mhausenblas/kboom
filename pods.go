@@ -59,31 +59,34 @@ func launchPods(client *k8s.Client, namespace string, numpods int) Result {
 		go pr.launch()
 	}
 
-	// check for successful running pods and capture their
-	// overall time, that is, launch time to 'Running':
+	// check every 500ms for successful running pods and capture
+	// their overall time, that is, launch to phase 'Running':
+	timeout := time.After(10 * time.Second)
+	tick := time.Tick(500 * time.Millisecond)
 	l := new(k8s.LabelSelector)
 	l.Eq("generator", "kboom")
+Check:
 	for {
-		var pods corev1.PodList
-		if err := client.List(context.Background(), namespace, &pods, l.Selector()); err != nil {
-			log.Printf("Can't check pods: %v", err)
-		}
-		allrunning := true
-		for _, pod := range pods.Items {
-			podname := *pod.Metadata.Name
-			podphase := pod.GetStatus().GetPhase()
-			if podphase == "Running" {
-				podruns[name2ord(podname)].End = time.Now()
-				podruns[name2ord(podname)].Success = true
+		select {
+		case <-timeout: // we're done checking
+			break Check
+		case <-tick: // check pods we generated
+			var pods corev1.PodList
+			if err := client.List(context.Background(), namespace, &pods, l.Selector()); err != nil {
+				log.Printf("Can't check pods: %v", err)
 				continue
 			}
-			allrunning = false
+			for _, pod := range pods.Items {
+				podname := *pod.Metadata.Name
+				podphase := pod.GetStatus().GetPhase()
+				if podphase == "Running" {
+					podruns[name2ord(podname)].End = time.Now()
+					podruns[name2ord(podname)].Success = true
+				}
+			}
 		}
-		if allrunning {
-			break
-		}
-		time.Sleep(1 * time.Second)
 	}
+
 	// record stats and clean up pods:
 	var numsuccess int
 	for _, run := range podruns {
