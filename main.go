@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/ericchiang/k8s"
@@ -19,7 +20,7 @@ func main() {
 	flag.StringVar(&load, "load", "pods:1", "The load, as in number of pods, defaults to pods:1.")
 	flag.Parse()
 	res, _ := kubecuddler.Kubectl(false, false, "/kubectl", "version", "--short")
-	fmt.Println(res)
+	fmt.Println(strings.Split(res, "\n")[1])
 	client, err := k8s.NewInClusterClient()
 	if err != nil {
 		log.Fatal(err)

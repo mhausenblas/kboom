@@ -38,13 +38,12 @@ From now on you can execute the `results` command as often as you like, you can 
 
 ```bash
 $ kubectl kboom results
-Client Version: v1.14.0
 Server Version: v1.12.6-eks-d69f1b
 Running a scale test, launching 10 pod(s) with a 14s timeout ...
 
 -------- Results --------
 Overall pods successful: 6 out of 10
-Total runtime: 14.061988653s sec
+Total runtime: 14.061988653s
 Fastest pod: 9.003997546s
 Slowest pod: 13.003831951s
 p50 pods: 12.003529448s
