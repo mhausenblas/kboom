@@ -30,8 +30,10 @@ func main() {
 
 	switch mode {
 	case "scale":
-		totaltime := launchPods(client, namespace, numpods)
-		log.Printf("Total time pods %v\n", totaltime)
+		if numpods > 0 {
+			r := launchPods(client, namespace, numpods)
+			log.Printf("Stats:\n%v\n", r)
+		}
 	case "soak":
 		log.Println("Not yet implemented, aborting.")
 	default:
