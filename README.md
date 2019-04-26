@@ -21,6 +21,7 @@ To install `kboom`, do the following:
 
 ```bash
 $ curl https://raw.githubusercontent.com/mhausenblas/kboom/master/kboom -o kubectl-kboom
+$ chmod +x kubectl-kboom
 $ sudo mv ./kubectl-kboom /usr/local/bin
 ```
 
