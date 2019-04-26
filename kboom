@@ -70,10 +70,10 @@ generate)
   genload $namespace $mode $load
   ;;
 results)
-  kubectl logs job/kboom
+  kubectl -n $namespace logs job/kboom
   ;;
 cleanup)
-  kubectl delete job/kboom
+  kubectl -n $namespace delete job/kboom
   ;;
 *)
   printf "The [$COMMAND] command is not supported! Use 'generate' to generate some load, 'results' to view the results, or 'cleanup' to clean up all resources.\n"
