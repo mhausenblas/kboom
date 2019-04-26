@@ -23,7 +23,7 @@ spec:
       serviceAccountName: kboom-sa
       containers:
       - name: kboom
-        image: 661776721573.dkr.ecr.us-east-2.amazonaws.com/kboom:latest
+        image: quay.io/mhausenblas/kboom:1
         command:
         - "/kboom"
         - "--namespace=$namespace"
