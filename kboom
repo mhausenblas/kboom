@@ -34,7 +34,7 @@ EOF
 
 # cat ${tmpdir}/kboom-job.yaml
 
-kubectl apply -f ${tmpdir}/kboom-job.yaml
+kubectl -n $namespace apply -f ${tmpdir}/kboom-job.yaml
 }
 
 
