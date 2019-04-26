@@ -35,7 +35,7 @@ Now you're set up and good to go, next up, learn how to use `kboom`.
 
 ## Use
 
-Here's how you'd use `kboom` to do some scale testing. The load test is run in-cluster as a [Kubernetes job](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) so you do multiple runs and compare outcomes in a straight-forward manner.
+Here's how you'd use `kboom` to do some scale testing. The load test is run in-cluster as a [Kubernetes job](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) so you do multiple runs and compare outcomes in a straight-forward manner. Note that by default `kboom` assumes there's a namespace `kboom` available and it will run in this namespace. If this namespace doesn't exist, create it with `kubectl create ns kboom` or otherwise use the `--namespace` parameter to overwrite it.
 
 So, first we use the `generate` command to generate the load, launching 10 pods (that is, using `busybox` containers that just sleep) with a timeout of 14 seconds (that is, if a pod is not running within that time, it's considered a failure):
 
