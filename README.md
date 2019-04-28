@@ -7,6 +7,8 @@
 
 Think of `kboom` as the Kubernetes equivalent of [boom](https://github.com/tarekziade/boom), allowing you to create short-term load for scale testing and long-term load for soak testing. Supported load out of the box for scale testing are pods and custom resources via CRDs for soak testing is planned.
 
+Check out the interactive [demo](https://www.katacoda.com/petermbenjamin/scenarios/kboom).
+
 ## Why bother?
 
 I didn't find a usable tool to do Kubernetes-native load testing, for scalability and/or soak purposes. Here's where I can imagine `kboom` might be useful for you:
@@ -16,6 +18,8 @@ I didn't find a usable tool to do Kubernetes-native load testing, for scalabilit
 - You are developer and want to test your custom controller or operator. You use `kboom` for a long-term soak test of your controller.
 
 ## Install
+
+Before you begin, you will need `kubectl` client version v1.12.0 or higher for [kubectl plugin support](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/).
 
 To install `kboom`, do the following:
 
@@ -28,6 +32,7 @@ $ sudo mv ./kubectl-kboom /usr/local/bin
 From this point on you can use it as a `kubectl` plugin as in `kubectl kboom`. However, in order for you to generate the load, you'll have to also give it the necessary [permissions](permissions.yaml) (note: you only need to do this once, per cluster):
 
 ```bash
+$ kubectl create ns kboom
 $ kubectl apply -f https://raw.githubusercontent.com/mhausenblas/kboom/master/permissions.yaml
 ```
 
