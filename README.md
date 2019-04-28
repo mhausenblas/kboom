@@ -17,6 +17,8 @@ I didn't find a usable tool to do Kubernetes-native load testing, for scalabilit
 
 ## Install
 
+Before you begin, you will need `kubectl` client version v1.12.0 or higher for [kubectl plugin support](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/).
+
 To install `kboom`, do the following:
 
 ```bash
@@ -28,6 +30,7 @@ $ sudo mv ./kubectl-kboom /usr/local/bin
 From this point on you can use it as a `kubectl` plugin as in `kubectl kboom`. However, in order for you to generate the load, you'll have to also give it the necessary [permissions](permissions.yaml) (note: you only need to do this once, per cluster):
 
 ```bash
+$ kubectl create ns kboom
 $ kubectl apply -f https://raw.githubusercontent.com/mhausenblas/kboom/master/permissions.yaml
 ```
 
