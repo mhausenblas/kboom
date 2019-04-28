@@ -7,6 +7,8 @@
 
 Think of `kboom` as the Kubernetes equivalent of [boom](https://github.com/tarekziade/boom), allowing you to create short-term load for scale testing and long-term load for soak testing. Supported load out of the box for scale testing are pods and custom resources via CRDs for soak testing is planned.
 
+Check out the interactive [demo](https://www.katacoda.com/petermbenjamin/scenarios/kboom).
+
 ## Why bother?
 
 I didn't find a usable tool to do Kubernetes-native load testing, for scalability and/or soak purposes. Here's where I can imagine `kboom` might be useful for you:
