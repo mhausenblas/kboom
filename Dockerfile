@@ -25,5 +25,6 @@ FROM scratch
 COPY --from=build-kubectl /kubectl .
 COPY --from=build-env /go/src/github.com/mhausenblas/kboom/kboom .
 COPY --from=build-env /etc/passwd /etc/passwd
-USER kboom
+# We need to specify the UID otherwise PSP won't recognize it
+USER 10001
 ENTRYPOINT ["/kboom"]

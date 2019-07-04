@@ -23,6 +23,7 @@ type podrun struct {
 	Success    bool
 	Start      time.Time
 	End        time.Time
+	Image      string
 }
 
 type Result struct {
@@ -38,7 +39,7 @@ type Result struct {
 func (run *podrun) launch() {
 	run.Start = time.Now()
 	run.Success = false
-	pod := genpod(run.Namespace, fmt.Sprintf("%s-sleeper-%d", run.Loadtype, run.Ordinalnum))
+	pod := genpod(run.Namespace, fmt.Sprintf("%s-sleeper-%d", run.Loadtype, run.Ordinalnum), run.Image)
 	err := run.Client.Create(context.Background(), pod)
 	if err != nil {
 		log.Printf("Can't create pod %v: %v", *pod.Metadata.Name, err)
@@ -46,7 +47,7 @@ func (run *podrun) launch() {
 	run.Pod = pod
 }
 
-func launchPods(client *k8s.Client, namespace string, timeoutinsec time.Duration, numpods int) Result {
+func launchPods(client *k8s.Client, namespace, image string, timeoutinsec time.Duration, numpods int) Result {
 	c := tachymeter.New(&tachymeter.Config{Size: numpods})
 	start := time.Now()
 	var podruns []*podrun
@@ -58,6 +59,7 @@ func launchPods(client *k8s.Client, namespace string, timeoutinsec time.Duration
 			Client:     client,
 			Namespace:  namespace,
 			Ordinalnum: i,
+			Image:      image,
 		}
 		podruns = append(podruns, pr)
 		go pr.launch()
@@ -125,7 +127,9 @@ func name2ord(name string) int {
 }
 
 // genpod generates the pod specification
-func genpod(namespace, name string) *corev1.Pod {
+func genpod(namespace, name, image string) *corev1.Pod {
+	var userID int64 = 65534
+
 	return &corev1.Pod{
 		Metadata: &metav1.ObjectMeta{
 			Name:      k8s.String(name),
@@ -136,8 +140,11 @@ func genpod(namespace, name string) *corev1.Pod {
 			Containers: []*corev1.Container{
 				&corev1.Container{
 					Name:    k8s.String("main"),
-					Image:   k8s.String("busybox"),
+					Image:   k8s.String(image),
 					Command: []string{"/bin/sh", "-ec", "sleep 3600"},
+					SecurityContext: &corev1.SecurityContext{
+						RunAsUser: &userID,
+					},
 				},
 			},
 		},
