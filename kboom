@@ -7,6 +7,8 @@ function genload {
 namespace=$1
 mode=$2
 load=$3
+kboom_image=$4
+image=$5
 
 # echo using namespace=\"$namespace\", mode \"$mode\", and load \"$load\"
 
@@ -23,12 +25,13 @@ spec:
       serviceAccountName: kboom-sa
       containers:
       - name: kboom
-        image: quay.io/mhausenblas/kboom:1
+        image: $kboom_image
         command:
         - "/kboom"
         - "--namespace=$namespace"
         - "--mode=$mode"
         - "--load=$load"
+        - "--image=$image"
       restartPolicy: Never
 EOF
 
@@ -45,6 +48,8 @@ command="${1:-results}"
 namespace="kboom"
 mode="scale:20"
 load="pods:1"
+kboom_image="quay.io/mhausenblas/kboom:1"
+image="busybox"
 
 ################################################################################
 ### MAIN #######################################################################
@@ -60,6 +65,12 @@ while [ $# -gt 0 ]; do
     --load=*)
       load="${1#*=}"
       ;;
+    --kboom-image=*)
+      kboom_image="${1#*=}"
+      ;;
+    --image=*)
+      image="${1#*=}"
+      ;;
   esac
   shift
 done
@@ -67,7 +78,7 @@ done
 
 case $command in
 generate)
-  genload $namespace $mode $load
+  genload $namespace $mode $load $kboom_image $image
   ;;
 results)
   kubectl -n $namespace logs job/kboom
@@ -78,4 +89,3 @@ cleanup)
 *)
   printf "The [$COMMAND] command is not supported! Use 'generate' to generate some load, 'results' to view the results, or 'cleanup' to clean up all resources.\n"
 esac
-

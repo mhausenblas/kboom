@@ -15,9 +15,11 @@ func main() {
 	var namespace string
 	var mode string
 	var load string
+	var image string
 	flag.StringVar(&namespace, "namespace", "kboom", "The namespace to run in, must exist. Create with 'kubectl create ns' if not done yet.")
 	flag.StringVar(&mode, "mode", "scale:20", "The mode to operate in: 'scale' for perf testing, 'soak' for long-term testing with timeout in seconds, defaults to scale:20.")
 	flag.StringVar(&load, "load", "pods:1", "The load, as in number of pods, defaults to pods:1.")
+	flag.StringVar(&image, "image", "busybox", "The container image used for the test pods. Must contain /bin/sh and sleep, defaults to busybox.")
 	flag.Parse()
 	res, _ := kubecuddler.Kubectl(false, false, "/kubectl", "version", "--short")
 	fmt.Println(strings.Split(res, "\n")[1])
@@ -32,7 +34,7 @@ func main() {
 	switch testmode {
 	case "scale":
 		if numpods > 0 {
-			r := launchPods(client, namespace, timeoutinsec, numpods)
+			r := launchPods(client, namespace, image, timeoutinsec, numpods)
 			fmt.Printf("Overall pods successful: %v out of %v\n", r.Totalsuccess, numpods)
 			fmt.Printf("Total runtime: %v\n", r.Totaltime)
 			fmt.Printf("Fastest pod: %v\n", r.Min)
