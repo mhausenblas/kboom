@@ -51,6 +51,7 @@ func launchPods(client *k8s.Client, namespace, image string, timeoutinsec time.D
 	c := tachymeter.New(&tachymeter.Config{Size: numpods})
 	start := time.Now()
 	var podruns []*podrun
+	successfulPods := 0
 
 	// launch the pods in parallel, as fast as we can:
 	for i := 0; i < numpods; i++ {
@@ -89,6 +90,11 @@ Check:
 					if !podruns[name2ord(podname)].Success {
 						podruns[name2ord(podname)].End = time.Now()
 						podruns[name2ord(podname)].Success = true
+						successfulPods++
+
+						if successfulPods == numpods {
+							break Check
+						}
 					}
 				}
 			}
