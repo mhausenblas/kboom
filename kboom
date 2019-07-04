@@ -84,7 +84,8 @@ results)
   kubectl -n $namespace logs job/kboom
   ;;
 cleanup)
-  kubectl -n $namespace delete job/kboom
+  kubectl -n $namespace delete --ignore-not-found job/kboom
+  kubectl -n $namespace delete pods -l generator=kboom
   ;;
 *)
   printf "The [$COMMAND] command is not supported! Use 'generate' to generate some load, 'results' to view the results, or 'cleanup' to clean up all resources.\n"
