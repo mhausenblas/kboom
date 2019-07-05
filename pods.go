@@ -36,6 +36,11 @@ type Result struct {
 	P95          time.Duration
 }
 
+type podEvent struct {
+	eventType string
+	pod       *corev1.Pod
+}
+
 func (run *podrun) launch() {
 	run.Start = time.Now()
 	run.Success = false
@@ -52,6 +57,7 @@ func launchPods(client *k8s.Client, namespace, image string, timeoutinsec time.D
 	start := time.Now()
 	var podruns []*podrun
 	successfulPods := 0
+	_ = successfulPods
 
 	// launch the pods in parallel, as fast as we can:
 	for i := 0; i < numpods; i++ {
@@ -69,35 +75,55 @@ func launchPods(client *k8s.Client, namespace, image string, timeoutinsec time.D
 	// check every second for successful running pods and capture
 	// their overall time, that is, launch to phase 'Running':
 	timeout := time.After(timeoutinsec)
-	tick := time.Tick(1000 * time.Millisecond)
 	l := new(k8s.LabelSelector)
 	l.Eq("generator", "kboom")
+
+	ctx := context.TODO()
+	var pod corev1.Pod
+	watcher, err := client.Watch(ctx, namespace, &pod, l.Selector())
+	if err != nil {
+		// TODO handle error
+	}
+	defer watcher.Close()
+
+	eventCh := make(chan podEvent, 1)
+
 Check:
 	for {
+		go func() {
+			pod := new(corev1.Pod)
+			eventType, err := watcher.Next(pod)
+			if err != nil {
+				// TODO handle error
+				return
+			}
+			eventCh <- podEvent{eventType, pod}
+		}()
+
 		select {
-		case <-timeout: // we're done checking
-			break Check
-		case <-tick: // check pods we generated
-			var pods corev1.PodList
-			if err := client.List(context.Background(), namespace, &pods, l.Selector()); err != nil {
-				log.Printf("Can't check pods: %v", err)
+		case e := <-eventCh:
+			if e.eventType == "Added" {
 				continue
 			}
-			for _, pod := range pods.Items {
-				podname := *pod.Metadata.Name
-				podphase := pod.GetStatus().GetPhase()
-				if podphase == "Running" {
-					if !podruns[name2ord(podname)].Success {
-						podruns[name2ord(podname)].End = time.Now()
-						podruns[name2ord(podname)].Success = true
-						successfulPods++
 
-						if successfulPods == numpods {
-							break Check
-						}
+			podname := *e.pod.Metadata.Name
+			podphase := e.pod.GetStatus().GetPhase()
+			if podphase == "Running" {
+				if !podruns[name2ord(podname)].Success {
+					podruns[name2ord(podname)].End = time.Now()
+					podruns[name2ord(podname)].Success = true
+					successfulPods++
+
+					if successfulPods == numpods {
+						watcher.Close()
+						break Check
 					}
 				}
 			}
+		case <-timeout:
+			fmt.Println("timeout")
+			watcher.Close()
+			break Check
 		}
 	}
 
