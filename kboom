@@ -14,6 +14,16 @@ image=$5
 
 tmpdir=$(mktemp -d)
 
+cat <<EOF >> ${tmpdir}/kboom-template.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kboom-template
+data:
+  template.yaml: |
+$(sed 's/^/    /' ${PWD}/manifests/pod_default.yaml)
+EOF
+
 cat <<EOF >> ${tmpdir}/kboom-job.yaml
 apiVersion: batch/v1
 kind: Job
@@ -23,6 +33,7 @@ spec:
   template:
     spec:
       serviceAccountName: kboom-sa
+      restartPolicy: Never
       containers:
       - name: kboom
         image: $kboom_image
@@ -32,12 +43,19 @@ spec:
         - "--mode=$mode"
         - "--load=$load"
         - "--image=$image"
-      restartPolicy: Never
+        volumeMounts:
+        - name: kboom-template
+          mountPath: /tmp/template
+          readOnly: True
+      volumes:
+      - name: kboom-template
+        configMap:
+          name: kboom-template
 EOF
 
-# cat ${tmpdir}/kboom-job.yaml
+cat ${tmpdir}/kboom-job.yaml
 
-kubectl -n $namespace apply -f ${tmpdir}/kboom-job.yaml
+kubectl -n $namespace apply -f ${tmpdir}/kboom-job.yaml -f  ${tmpdir}/kboom-template.yaml
 }
 
 

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strconv"
 	"strings"
@@ -12,6 +14,7 @@ import (
 	corev1 "github.com/ericchiang/k8s/apis/core/v1"
 	metav1 "github.com/ericchiang/k8s/apis/meta/v1"
 	"github.com/jamiealquiza/tachymeter"
+	k8Yaml "k8s.io/apimachinery/pkg/util/yaml"
 )
 
 type podrun struct {
@@ -41,10 +44,10 @@ type podEvent struct {
 	pod       *corev1.Pod
 }
 
-func (run *podrun) launch() {
+func (run *podrun) launch(podTemplate corev1.Pod) {
 	run.Start = time.Now()
 	run.Success = false
-	pod := genpod(run.Namespace, fmt.Sprintf("%s-sleeper-%d", run.Loadtype, run.Ordinalnum), run.Image)
+	pod := genpod(run.Namespace, fmt.Sprintf("%s-sleeper-%d", run.Loadtype, run.Ordinalnum), run.Image, podTemplate)
 	err := run.Client.Create(context.Background(), pod)
 	if err != nil {
 		log.Printf("Can't create pod %v: %v", *pod.Metadata.Name, err)
@@ -57,7 +60,18 @@ func launchPods(client *k8s.Client, namespace, image string, timeoutinsec time.D
 	start := time.Now()
 	var podruns []*podrun
 	successfulPods := 0
-	_ = successfulPods
+
+	content, err := ioutil.ReadFile("/tmp/template/template.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	podTemplate := &corev1.Pod{}
+	dec := k8Yaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(content)), 1000)
+
+	if err := dec.Decode(&podTemplate); err != nil {
+		log.Fatal(err)
+	}
 
 	// launch the pods in parallel, as fast as we can:
 	for i := 0; i < numpods; i++ {
@@ -69,7 +83,7 @@ func launchPods(client *k8s.Client, namespace, image string, timeoutinsec time.D
 			Image:      image,
 		}
 		podruns = append(podruns, pr)
-		go pr.launch()
+		go pr.launch(*podTemplate)
 	}
 
 	// check every second for successful running pods and capture
@@ -159,26 +173,15 @@ func name2ord(name string) int {
 }
 
 // genpod generates the pod specification
-func genpod(namespace, name, image string) *corev1.Pod {
-	var userID int64 = 65534
+func genpod(namespace, name, image string, podTemplate corev1.Pod) *corev1.Pod {
 
-	return &corev1.Pod{
-		Metadata: &metav1.ObjectMeta{
-			Name:      k8s.String(name),
-			Namespace: k8s.String(namespace),
-			Labels:    map[string]string{"generator": "kboom"},
-		},
-		Spec: &corev1.PodSpec{
-			Containers: []*corev1.Container{
-				&corev1.Container{
-					Name:    k8s.String("main"),
-					Image:   k8s.String(image),
-					Command: []string{"/bin/sh", "-ec", "sleep 3600"},
-					SecurityContext: &corev1.SecurityContext{
-						RunAsUser: &userID,
-					},
-				},
-			},
-		},
+	podTemplate.Metadata = &metav1.ObjectMeta{
+		Name:      k8s.String(name),
+		Namespace: k8s.String(namespace),
+		Labels:    map[string]string{"generator": "kboom"},
 	}
+	// TODO: currently only one container is supported
+	podTemplate.Spec.Containers[0].Image = k8s.String(image)
+
+	return &podTemplate
 }
