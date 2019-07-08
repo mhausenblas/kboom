@@ -1,0 +1,10 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: dummy
+spec:
+  containers:
+  - name: main
+    command: ["/bin/sh", "-ec", "sleep 3600"]
+    securityContext:
+      runAsUser: 65534
