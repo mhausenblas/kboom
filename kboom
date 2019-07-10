@@ -48,7 +48,7 @@ command="${1:-results}"
 namespace="kboom"
 mode="scale:20"
 load="pods:1"
-kboom_image="quay.io/mhausenblas/kboom:1"
+kboom_image="quay.io/mhausenblas/kboom:2"
 image="busybox"
 
 ################################################################################
